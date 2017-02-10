@@ -1,8 +1,8 @@
 
 #include "tree/tree.hpp"
 
-#include <iostream>
-
 int main () {
-    Tree<int, 2> single = tree::singleton<2>{1};
+    Tree<2, int> single = tree::singleton<2>(1);
+    auto& node = mpark::get<1>(single);
+    return (node.value_ == 1) ? 0 : 1;
 }
