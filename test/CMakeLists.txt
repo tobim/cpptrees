@@ -15,7 +15,7 @@ endif()
 function(gen_test name)
   add_executable(${name} ${name}.cpp)
   #set_target_properties(${name} PROPERTIES COMPILE_FLAGS "${cxx_strict}")
-  target_link_libraries(${name} tree)
+  target_link_libraries(${name} cpptrees)
   add_test(${name} ${name})
 endfunction(gen_test)
 

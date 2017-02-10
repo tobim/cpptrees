@@ -10,21 +10,21 @@ HunterGate(
     SHA1 "put-archive-sha1-here"
 )
 
-project(tree)
+project(cpptrees)
 
-option(TREE_DISABLE_TESTING "dont build tests")
+option(CPPTREES_ENABLE_TESTING "dont build tests" ON)
 
 hunter_add_package(mpark_variant)
 
 find_package(mpark_variant CONFIG REQUIRED)
 
-add_library(tree INTERFACE)
-target_link_libraries(tree INTERFACE mpark_variant)
-target_include_directories(tree INTERFACE
+add_library(cpptrees INTERFACE)
+target_link_libraries(cpptrees INTERFACE mpark_variant)
+target_include_directories(cpptrees INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
-if(NOT TREE_DISABLE_TESTING)
+if(CPPTREES_ENABLE_TESTING)
   enable_testing()
   add_subdirectory(test)
 endif()
