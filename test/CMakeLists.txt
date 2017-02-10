@@ -20,3 +20,4 @@ function(gen_test name)
 endfunction(gen_test)
 
 gen_test(builder)
+gen_test(map)
