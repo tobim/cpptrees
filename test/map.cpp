@@ -32,7 +32,9 @@ int main()
             Node{5, {std::move(tree1), gen()}}};
 
         tree::depth_first(tree, [](int p) { std::cout << p << ' '; });
+        std::cout << std::endl;
 
+        tree::breadth_first(tree, [](int p) { std::cout << p << ' '; });
         std::cout << std::endl;
     }
 

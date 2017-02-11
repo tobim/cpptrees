@@ -3,6 +3,7 @@
 
 #include <array>
 #include <memory>
+#include <vector>
 #include <algorithm>
 #include "mpark/variant.hpp"
 
@@ -78,60 +79,46 @@ void depth_first(Tree<arity, T>& tree, F&& f)
     mpark::visit(DepthVisitor<F>{std::move(f)}, tree);
 }
 
-template <typename Iter>
-struct range {
-    Iter begin;
-    Iter end;
-};
-
 namespace impl {
 
-template <typename F>
-struct TreeValVisitor {
-    F f;
-    TreeValVisitor(F&& f) : f{std::forward<F>(f)} {}
-    void operator() (const Leaf& leaf) {}
-    template <size_t arity, typename T>
-    void operator() (const Node<arity, T>& node) {
-        f(node.value_);
-    }
-};
-
-template <typename F>
-struct ChildrenVisitor {
-    F f;
-    TreeValVisitor(F&& f) : f{std::forward<F>(f)} {}
-    void operator() (const Leaf& leaf) {}
-    template <size_t arity, typename T>
-    void operator() (const Node<arity, T>& node) {
-        std::for_each(node.children.begin(), node.children.end(), [this](auto& child) {
-                if( child )
-                    mpark::visit(BreadthVisitor<F>{f}, *child);
-                });
-    }
-};
-
-template <size_t arity, typename T>
-void treeValues( Tree<arity, T> tree ) {
-    mpark::visit(TreeValVisitor<F>{std::move(f)}, tree);
-}
-
-}
-
-template <typename F>
+template <typename F, typename G>
 struct BreadthVisitor {
     F f;
-    BreadthVisitor(F&& f) : f{std::forward<F>(f)} {}
+    G g;
+    BreadthVisitor(F&& f, G g) : f{std::forward<F>(f)}, g{g} {}
     void operator() (const Leaf& leaf) {}
+
     template <size_t arity, typename T>
     void operator() (const Node<arity, T>& node) {
         f(node.value_);
-        std::for_each(node.children.begin(), node.children.end(), [this](auto& child) {
-                if( child )
-                    mpark::visit(*this, *child);
-                });
+        for( auto& c : node.children ) {
+            if (c) {
+                g(*c);
+            }
+        }
     }
 };
+
+template <size_t arity, typename T, typename F>
+void bf(const std::vector<Tree<arity, T>*>& trees, F&& f) {
+    std::vector<Tree<arity, T>*> children;
+    auto inserter = [&children](Tree<arity, T>& c) { children.push_back(&c); };
+
+    for (auto& t : trees) {
+        mpark::visit(BreadthVisitor<F, decltype(inserter)>{
+                std::forward<F>(f), inserter
+        }, *t);
+    }
+
+    if (!children.empty())
+        bf(children, f);
+}
+}
+
+template <size_t arity, typename T, typename F>
+void breadth_first(Tree<arity, T>& tree, F&& f) {
+    impl::bf( std::vector<Tree<arity, T>*>{&tree}, std::forward<F>(f) );
+}
 
 }
 
