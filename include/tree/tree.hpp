@@ -24,7 +24,6 @@ struct Node
     children_type children;
 
     Node(T v) : value_{v} {}
-    //Node(T v, std::initializer_list<tree_type> cdren) : value_{v}, children{cdren.begin(), cdren.end()} {}
     Node(T v, std::array<tree_type, arity>&& cdren) : value_{v} {
         size_t idx = 0;
         for (auto& c : cdren) {
@@ -42,8 +41,6 @@ struct Tree : mpark::variant<Leaf, Node<arity, T>> {
     Tree() = default;
     explicit Tree(node_type&& node) : tree_type{std::forward<node_type>(node)} {}
     explicit Tree(Leaf&& leaf) : tree_type{std::forward<Leaf>(leaf)} {}
-
-    //Tree(Tree&& t) = default;
 
     static
     Tree empty_tree() {
