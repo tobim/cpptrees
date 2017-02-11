@@ -46,6 +46,13 @@ struct Tree : mpark::variant<Leaf, Node<arity, T>> {
     explicit Tree(Leaf&& leaf) : tree_type{std::forward<Leaf>(leaf)} {}
     static Tree empty_tree() { return Tree{Leaf{}}; }
     static Tree singleton(T&& v) { return Tree{{v}}; }
+    struct bf_iterator;
+
+    struct end_sentinel {
+    };
+
+    bf_iterator bf_begin() { return bf_iterator{this}; }
+    end_sentinel end() { return {}; }
 };
 
 template <typename F>
@@ -113,6 +120,75 @@ void breadth_first(Tree<arity, T>& tree, F&& f)
 {
     impl::bf(std::vector<Tree<arity, T>*>{&tree}, std::forward<F>(f));
 }
+
+template <size_t arity, typename T>
+struct Tree<arity, T>::bf_iterator {
+    using tree_type = Tree<arity, T>;
+    using node_type = typename tree_type::node_type;
+    using reference = T&;
+    std::vector<tree_type*> current_layer;
+    std::vector<tree_type*> next_layer;
+    typename std::vector<tree_type *>::iterator it, end;
+    bool finished = false;
+
+    void register_children()
+    {
+        auto& node = mpark::get<node_type>(**it);
+        for (auto& c : node.children) {
+            if (c) {
+                next_layer.push_back(&*c);
+            }
+        }
+    }
+
+    bf_iterator(tree_type* root)
+        : current_layer{root}, it{current_layer.begin()},
+          end{current_layer.end()}
+    {
+        if ((*it)->index() != 1) {
+            ++(*this);
+        }
+        else {
+            register_children();
+        }
+    }
+
+    bf_iterator& operator++()
+    {
+        if (finished) {
+            return *this;
+        }
+
+        while (++it == end || (*it)->index() != 1) {
+            if (it == end) {
+                if (next_layer.empty()) {
+                    finished = true;
+                    return *this;
+                }
+                else {
+                    std::swap(current_layer, next_layer);
+                    next_layer.clear();
+                    it  = current_layer.begin();
+                    end = current_layer.end();
+                    break;
+                }
+            }
+        }
+
+        register_children();
+        return *this;
+    }
+
+    reference operator*() { return mpark::get<node_type>(**it).value_; }
+    friend bool operator==(const bf_iterator& bfi, end_sentinel)
+    {
+        return bfi.finished;
+    }
+    friend bool operator!=(const bf_iterator& bfi, end_sentinel es)
+    {
+        return !(bfi == es);
+    }
+};
 }
 
 using tree::Tree;

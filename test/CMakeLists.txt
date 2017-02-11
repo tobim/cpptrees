@@ -21,3 +21,4 @@ endfunction(gen_test)
 
 gen_test(builder)
 gen_test(map)
+gen_test(iterator)
