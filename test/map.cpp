@@ -4,11 +4,11 @@
 #include <iostream>
 
 constexpr size_t r = 2;
-Tree<r, int> gen() {
+Tree<r, int> gen()
+{
     using Ti   = Tree<r, int>;
     using Node = Ti::node_type;
-    auto tree  = Ti{
-        Node{1, {Ti::singleton(2), Ti::singleton(3)}}};
+    auto tree  = Ti{Node{1, {Ti::singleton(2), Ti::singleton(3)}}};
 
     return tree;
 }
@@ -28,8 +28,7 @@ int main()
 
         using Ti   = Tree<r, int>;
         using Node = Ti::node_type;
-        auto tree  = Ti{
-            Node{5, {std::move(tree1), gen()}}};
+        auto tree  = Ti{Node{5, {std::move(tree1), gen()}}};
 
         tree::depth_first(tree, [](int p) { std::cout << p << ' '; });
         std::cout << std::endl;
@@ -40,10 +39,10 @@ int main()
 
     {
         constexpr size_t r = 3;
-        using Ti   = Tree<r, int>;
-        using Node = Ti::node_type;
-        auto tree  = Ti{
-            Node{1, {Ti::singleton(2), Ti::empty_tree(), Ti::singleton(3)}}};
+        using Ti           = Tree<r, int>;
+        using Node         = Ti::node_type;
+        auto tree =
+            Ti{Node{1, {Ti::singleton(2), Ti::empty_tree(), Ti::singleton(3)}}};
 
         tree::depth_first(tree, [](int p) { std::cout << p << ' '; });
 
