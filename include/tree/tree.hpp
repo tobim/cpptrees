@@ -123,9 +123,16 @@ void breadth_first(Tree<arity, T>& tree, F&& f)
 
 template <size_t arity, typename T>
 struct Tree<arity, T>::bf_iterator {
+    using difference_type = std::ptrdiff_t;
+    using value_type = T;
+    using pointer = T*;
+    using reference = T&;
+    using iterator_category = std::forward_iterator_tag;
+
+  private:
     using tree_type = Tree<arity, T>;
     using node_type = typename tree_type::node_type;
-    using reference = T&;
+
     std::vector<tree_type*> current_layer;
     std::vector<tree_type*> next_layer;
     typename std::vector<tree_type *>::iterator it, end;
@@ -141,6 +148,7 @@ struct Tree<arity, T>::bf_iterator {
         }
     }
 
+  public:
     bf_iterator(tree_type* root)
         : current_layer{root}, it{current_layer.begin()},
           end{current_layer.end()}
