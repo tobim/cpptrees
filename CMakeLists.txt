@@ -25,6 +25,7 @@ target_include_directories(cpptrees INTERFACE
   $<INSTALL_INTERFACE:include>)
 
 if(CPPTREES_ENABLE_TESTING)
+  include("cmake/warnings.cmake")
   enable_testing()
   add_subdirectory(test)
 endif()

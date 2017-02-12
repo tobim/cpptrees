@@ -65,7 +65,7 @@ template <typename F>
 struct DepthVisitor {
     F f;
     DepthVisitor(F&& f) : f{std::forward<F>(f)} {}
-    void operator()(const Leaf& leaf) {}
+    void operator()(const Leaf&) {}
     template <size_t arity, typename T>
     void operator()(const Node<arity, T>& node)
     {
@@ -91,7 +91,7 @@ struct BreadthVisitor {
     F f;
     G g;
     BreadthVisitor(F&& f, G g) : f{std::forward<F>(f)}, g{g} {}
-    void operator()(const Leaf& leaf) {}
+    void operator()(const Leaf&) {}
     template <size_t arity, typename T>
     void operator()(const Node<arity, T>& node)
     {
