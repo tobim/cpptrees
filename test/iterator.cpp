@@ -22,10 +22,16 @@ int main()
         auto tree  = Ti{Node{5, {std::move(tree1), gen()}}};
 
         auto bfit = tree.bf_begin();
+        auto dfit = tree.df_begin();
         auto end  = tree.end();
 
         for (; bfit != end; ++bfit) {
             std::cout << *bfit << ' ';
+        }
+        std::cout << std::endl;
+
+        for (; dfit != end; ++dfit) {
+            std::cout << *dfit << ' ';
         }
         std::cout << std::endl;
     }

@@ -5,7 +5,10 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <stack>
+#include <utility>
 #include <vector>
+#include <iostream>
 
 namespace tree {
 
@@ -37,20 +40,23 @@ struct Node {
 template <size_t arity, typename T>
 struct Tree : mpark::variant<Leaf, Node<arity, T>> {
     using node_type = Node<arity, T>;
-    using tree_type = mpark::variant<Leaf, node_type>;
+    using var_type = mpark::variant<Leaf, node_type>;
 
     Tree() = default;
-    explicit Tree(node_type&& node) : tree_type{std::forward<node_type>(node)}
+    explicit Tree(node_type&& node) : var_type{std::forward<node_type>(node)}
     {
     }
-    explicit Tree(Leaf&& leaf) : tree_type{std::forward<Leaf>(leaf)} {}
+    explicit Tree(Leaf&& leaf) : var_type{std::forward<Leaf>(leaf)} {}
     static Tree empty_tree() { return Tree{Leaf{}}; }
     static Tree singleton(T&& v) { return Tree{{v}}; }
+
+    struct df_iterator;
     struct bf_iterator;
 
     struct end_sentinel {
     };
 
+    df_iterator df_begin() { return df_iterator{this}; }
     bf_iterator bf_begin() { return bf_iterator{this}; }
     end_sentinel end() { return {}; }
 };
@@ -124,7 +130,7 @@ void breadth_first(Tree<arity, T>& tree, F&& f)
 template <size_t arity, typename T>
 struct Tree<arity, T>::bf_iterator {
     using difference_type = std::ptrdiff_t;
-    using value_type = T;
+    using value_typetree = T;
     using pointer = T*;
     using reference = T&;
     using iterator_category = std::forward_iterator_tag;
@@ -195,6 +201,73 @@ struct Tree<arity, T>::bf_iterator {
     friend bool operator!=(const bf_iterator& bfi, end_sentinel es)
     {
         return !(bfi == es);
+    }
+};
+
+template <size_t arity, typename T>
+struct Tree<arity, T>::df_iterator {
+    using difference_type   = std::ptrdiff_t;
+    using value_typetree    = T;
+    using pointer           = T*;
+    using reference         = T&;
+    using iterator_category = std::forward_iterator_tag;
+
+  private:
+    using tree_type  = Tree<arity, T>;
+    using node_type  = typename tree_type::node_type;
+    using cit_type   = typename node_type::children_type::iterator;
+    using level_type = std::pair<cit_type, cit_type>;
+
+    std::stack<level_type> up;
+    tree_type* current;
+
+  public:
+    df_iterator(tree_type* root) : current{root}
+    {
+        if (current->index() != 1) {
+            current = nullptr;
+        }
+    }
+
+    df_iterator& operator++()
+    {
+        if (current) {
+            auto& node = mpark::get<node_type>(*current);
+            auto next  = node.children.begin();
+            auto end   = node.children.end();
+            while (true) {
+                next = std::find_if(next, end, [](auto& c) -> bool {
+                    return c ? c->index() == 1 : false;
+                });
+                if (next != end) {
+                    current = &**next;
+                    up.push({++next, end});
+                    break;
+                }
+                else {
+                    if (up.empty()) {
+                        current = nullptr;
+                        break;
+                    }
+                    else {
+                        next = up.top().first;
+                        end  = up.top().second;
+                        up.pop();
+                    }
+                }
+            }
+        }
+        return *this;
+    }
+
+    reference operator*() { return mpark::get<node_type>(*current).value_; }
+    friend bool operator==(const df_iterator& dfi, end_sentinel)
+    {
+        return dfi.current == nullptr;
+    }
+    friend bool operator!=(const df_iterator& dfi, end_sentinel es)
+    {
+        return !(dfi == es);
     }
 };
 }
