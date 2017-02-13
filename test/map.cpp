@@ -1,51 +1,74 @@
 
 #include "tree/tree.hpp"
+#include "catch.hpp"
 
-#include <iostream>
-
-constexpr size_t r = 2;
-Tree<r, int> gen()
+static
+Tree<2, int> gen2()
 {
-    using Ti   = Tree<r, int>;
+    using Ti   = Tree<2, int>;
     using Node = Ti::node_type;
-    auto tree  = Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3)}}}};
-
+    auto tree =
+        Ti{Node{5,
+                {{Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3)}}}},
+                  Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3)}}}}
+                 }}
+        }};
     return tree;
 }
 
-int main()
+static
+Tree<3, int> gen3()
 {
-    {
-        auto tree = gen();
+    using Ti   = Tree<3, int>;
+    using Node = Ti::node_type;
+    auto tree  = Ti{Node{
+        5,
+        {{Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3), Ti::singleton(4)}}}},
+          Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3), Ti::singleton(4)}}}},
+          Ti{Node{ 1, {{Ti::singleton(2), Ti::singleton(3), Ti::singleton(4)}}}
+        }}}
+    }};
+    return tree;
+}
 
-        tree::depth_first(tree, [](int p) { std::cout << p << ' '; });
-
-        std::cout << std::endl;
+SCENARIO( "we can traverse a tree in different ways", "[tree]" ) {
+    GIVEN( "an binary test tree" ) {
+        auto test = gen2();
+        WHEN( "We walk it depth-first" ) {
+            std::vector<int> out;
+            std::vector<int> ref = {5, 1, 2, 3, 1, 2, 3};
+            tree::depth_first(test, [&out](int p) { out.push_back(p); });
+            THEN( "The order is correct" ) {
+                REQUIRE( out == ref );
+            }
+        }
+        WHEN( "We walk it breadth-first" ) {
+            std::vector<int> out;
+            std::vector<int> ref = {5, 1, 1, 2, 3, 2, 3};
+            tree::breadth_first(test, [&out](int p) { out.push_back(p); });
+            THEN( "The order is correct" ) {
+                REQUIRE( out == ref );
+            }
+        }
     }
 
-    {
-        auto tree1 = gen();
-
-        using Ti   = Tree<r, int>;
-        using Node = Ti::node_type;
-        auto tree  = Ti{Node{5, {{std::move(tree1), gen()}}}};
-
-        tree::depth_first(tree, [](int p) { std::cout << p << ' '; });
-        std::cout << std::endl;
-
-        tree::breadth_first(tree, [](int p) { std::cout << p << ' '; });
-        std::cout << std::endl;
-    }
-
-    {
-        constexpr size_t r = 3;
-        using Ti           = Tree<r, int>;
-        using Node         = Ti::node_type;
-        auto tree          = Ti{
-            Node{1, {{Ti::singleton(2), Ti::empty_tree(), Ti::singleton(3)}}}};
-
-        tree::depth_first(tree, [](int p) { std::cout << p << ' '; });
-
-        std::cout << std::endl;
+    GIVEN( "an ternary test tree" ) {
+        auto test = gen3();
+        WHEN( "We walk it depth-first" ) {
+            std::vector<int> out;
+            std::vector<int> ref = {5, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4};
+            tree::depth_first(test, [&out](int p) { out.push_back(p); });
+            THEN( "The order is correct" ) {
+                REQUIRE( out == ref );
+            }
+        }
+        WHEN( "We walk it breadth-first" ) {
+            std::vector<int> out;
+            std::vector<int> ref = {5, 1, 1, 1, 2, 3, 4, 2, 3, 4, 2, 3, 4};
+            tree::breadth_first(test, [&out](int p) { out.push_back(p); });
+            THEN( "The order is correct" ) {
+                REQUIRE( out == ref );
+            }
+        }
     }
 }

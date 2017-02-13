@@ -1,38 +1,106 @@
 
 #include "tree/tree.hpp"
-#include <iostream>
+#include "catch.hpp"
 
-constexpr size_t r = 2;
-Tree<r, int> gen()
+static
+Tree<2, int> gen2()
 {
-    using Ti   = Tree<r, int>;
+    using Ti   = Tree<2, int>;
     using Node = Ti::node_type;
-    auto tree  = Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3)}}}};
-
+    auto tree =
+        Ti{Node{5,
+                {{Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3)}}}},
+                  Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3)}}}}
+                 }}
+        }};
     return tree;
 }
 
-int main()
+static
+Tree<3, int> gen3()
 {
-    {
-        auto tree1 = gen();
+    using Ti   = Tree<3, int>;
+    using Node = Ti::node_type;
+    auto tree  = Ti{Node{
+        5,
+        {{Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3), Ti::singleton(4)}}}},
+          Ti{Node{1, {{Ti::singleton(2), Ti::singleton(3), Ti::singleton(4)}}}},
+          Ti{Node{ 1, {{Ti::singleton(2), Ti::singleton(3), Ti::singleton(4)}}}
+        }}}
+    }};
+    return tree;
+}
 
-        using Ti   = Tree<r, int>;
-        using Node = Ti::node_type;
-        auto tree  = Ti{Node{5, {{std::move(tree1), gen()}}}};
-
-        auto bfit = tree.bf_begin();
-        auto dfit = tree.df_begin();
-        auto end  = tree.end();
-
-        for (; bfit != end; ++bfit) {
-            std::cout << *bfit << ' ';
+SCENARIO( "we can iterate over a tree in different ways", "[tree]" ) {
+    GIVEN( "a binary test tree" ) {
+        auto test = gen2();
+        WHEN( "we walk it depth-first" ) {
+            auto dfit = test.df_begin();
+            THEN( "The order is correct" ) {
+                REQUIRE( *dfit++ == 5 );
+                REQUIRE( *dfit++ == 1 );
+                REQUIRE( *dfit++ == 2 );
+                REQUIRE( *dfit++ == 3 );
+                REQUIRE( *dfit++ == 1 );
+                REQUIRE( *dfit++ == 2 );
+                REQUIRE( *dfit++ == 3 );
+                REQUIRE( dfit == test.end() );
+            }
         }
-        std::cout << std::endl;
-
-        for (; dfit != end; ++dfit) {
-            std::cout << *dfit << ' ';
+        WHEN( "we walk it breadth-first" ) {
+            auto bfit = test.bf_begin();
+            THEN( "The order is correct" ) {
+                REQUIRE( *bfit++ == 5 );
+                REQUIRE( *bfit++ == 1 );
+                REQUIRE( *bfit++ == 1 );
+                REQUIRE( *bfit++ == 2 );
+                REQUIRE( *bfit++ == 3 );
+                REQUIRE( *bfit++ == 2 );
+                REQUIRE( *bfit++ == 3 );
+                REQUIRE( bfit == test.end() );
+            }
         }
-        std::cout << std::endl;
+    }
+
+    GIVEN( "a ternary test tree" ) {
+        auto test = gen3();
+        WHEN( "we walk it depth-first" ) {
+            auto dfit = test.df_begin();
+            THEN( "The order is correct" ) {
+                REQUIRE( *dfit++ == 5 );
+                REQUIRE( *dfit++ == 1 );
+                REQUIRE( *dfit++ == 2 );
+                REQUIRE( *dfit++ == 3 );
+                REQUIRE( *dfit++ == 4 );
+                REQUIRE( *dfit++ == 1 );
+                REQUIRE( *dfit++ == 2 );
+                REQUIRE( *dfit++ == 3 );
+                REQUIRE( *dfit++ == 4 );
+                REQUIRE( *dfit++ == 1 );
+                REQUIRE( *dfit++ == 2 );
+                REQUIRE( *dfit++ == 3 );
+                REQUIRE( *dfit++ == 4 );
+                REQUIRE( dfit == test.end() );
+            }
+        }
+        WHEN( "we walk it breadth-first" ) {
+            auto bfit = test.bf_begin();
+            THEN( "The order is correct" ) {
+                REQUIRE( *bfit++ == 5 );
+                REQUIRE( *bfit++ == 1 );
+                REQUIRE( *bfit++ == 1 );
+                REQUIRE( *bfit++ == 1 );
+                REQUIRE( *bfit++ == 2 );
+                REQUIRE( *bfit++ == 3 );
+                REQUIRE( *bfit++ == 4 );
+                REQUIRE( *bfit++ == 2 );
+                REQUIRE( *bfit++ == 3 );
+                REQUIRE( *bfit++ == 4 );
+                REQUIRE( *bfit++ == 2 );
+                REQUIRE( *bfit++ == 3 );
+                REQUIRE( *bfit++ == 4 );
+                REQUIRE( bfit == test.end() );
+            }
+        }
     }
 }

@@ -59,6 +59,10 @@ struct Tree : mpark::variant<Leaf, Node<arity, T>> {
     df_iterator df_begin() { return df_iterator{this}; }
     bf_iterator bf_begin() { return bf_iterator{this}; }
     end_sentinel end() { return {}; }
+
+    bool empty() const {
+        return var_type::index() == 0;
+    }
 };
 
 template <typename F>
@@ -167,6 +171,12 @@ struct Tree<arity, T>::bf_iterator {
         }
     }
 
+    bf_iterator(const bf_iterator& other)
+        : current_layer{other.current_layer}, next_layer{other.next_layer},
+          it{other.it}, end{other.end}
+    {
+    }
+
     bf_iterator& operator++()
     {
         if (finished) {
@@ -191,6 +201,12 @@ struct Tree<arity, T>::bf_iterator {
 
         register_children();
         return *this;
+    }
+
+    bf_iterator operator++(int) {
+        auto ret = *this;
+        ++(*this);
+        return ret;
     }
 
     reference operator*() { return mpark::get<node_type>(**it).value_; }
@@ -258,6 +274,12 @@ struct Tree<arity, T>::df_iterator {
             }
         }
         return *this;
+    }
+
+    df_iterator operator++(int) {
+        auto ret = *this;
+        ++(*this);
+        return ret;
     }
 
     reference operator*() { return mpark::get<node_type>(*current).value_; }
