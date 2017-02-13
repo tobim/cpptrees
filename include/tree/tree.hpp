@@ -4,11 +4,11 @@
 #include "mpark/variant.hpp"
 #include <algorithm>
 #include <array>
+#include <iterator>
 #include <memory>
 #include <stack>
 #include <utility>
 #include <vector>
-#include <iostream>
 
 namespace tree {
 
@@ -145,7 +145,9 @@ struct Tree<arity, T>::bf_iterator {
 
     std::vector<tree_type*> current_layer;
     std::vector<tree_type*> next_layer;
-    typename std::vector<tree_type *>::iterator it, end;
+    using it_type = typename std::vector<tree_type *>::iterator;
+    using cit_type = typename std::vector<tree_type *>::const_iterator;
+    it_type it, end;
     bool finished = false;
 
     void register_children()
@@ -173,7 +175,10 @@ struct Tree<arity, T>::bf_iterator {
 
     bf_iterator(const bf_iterator& other)
         : current_layer{other.current_layer}, next_layer{other.next_layer},
-          it{other.it}, end{other.end}
+          it{current_layer.begin() +
+             std::distance(other.current_layer.begin(),
+                           static_cast<cit_type>(other.it))},
+          end{current_layer.end()}
     {
     }
 
